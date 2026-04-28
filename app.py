@@ -6,7 +6,7 @@ import pandas as pd
 import time
 import plotly.express as px
 
-st.set_page_config(page_title="MLP Visualizer", layout="wide")
+st.set_page_config(page_title="NeuralInsight", layout="wide")
 
 st.sidebar.header("Configuration")
 layers_str = st.sidebar.text_input("네트워크 구조 (ex: 2,4,3,2)", value="2,2,1")
@@ -184,7 +184,8 @@ def draw_mlp_dynamic(mlp, layers, step):
                 
     return dot
 
-st.title("MLP Propagation Visualizer (Matrix Edition)")
+st.title("NeuralInsight: The Transparent MLP Visualizer")
+st.markdown("👨‍💻 Developed by [@CursedCat7](https://github.com/CursedCat7) | 📦 [GitHub Repository](https://github.com/CursedCat7/NeuralInsight.git)")
 st.markdown(f"**현재 아키텍처:** {layers_str} 구조")
 
 tab1, tab2 = st.tabs(["Step-by-Step 구조 이해", "Continuous Training (연속 학습) 모드"])
