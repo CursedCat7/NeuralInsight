@@ -8,6 +8,8 @@
 
 An interactive, math-driven web application that demystifies Multi-Layer Perceptrons (MLPs). It dynamically renders backpropagation calculus using matrix notation and visualizes weight updates in real-time.
 
+🚀 **Live Demo**: [Try it on Streamlit Cloud](https://neuralinsight.streamlit.app/)
+
 ## Features
 
 - **Dynamic Architecture**: Define any network structure (e.g., `3,5,4,2`) and watch the nodes, edges, and weight matrices adapt instantly.
@@ -40,6 +42,16 @@ streamlit run app.py
 ```
 
 The app will automatically open in your default browser at `http://localhost:8501`.
+
+## Contributing
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 

@@ -6,7 +6,9 @@
 ![Streamlit](https://img.shields.io/badge/streamlit-app-FF4B4B.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-**NeuralInsight**는 다층 퍼셉트론(MLP)의 동작 원리와 블랙박스를 시각적으로 투명하게 풀어내는 스터디용 웹앱입니다. 행렬 표기법을 통해 역전파 미분 과정을 동적으로 렌더링하고 가중치 업데이트를 실시간으로 시각화합니다.
+**NeuralInsight**는 다층 퍼셉트론(MLP)의 동작 원리와 블랙박스를 시각적으로 풀어내는 스터디용 웹앱입니다. 행렬 표기법을 통해 역전파 미분 과정을 동적으로 렌더링하고 가중치 업데이트를 실시간으로 시각화합니다.
+
+🚀 **라이브 데모**: [Streamlit 클라우드에서 실행해보기](https://neuralinsight.streamlit.app/)
 
 ## 주요 기능 (Features)
 
@@ -33,13 +35,23 @@ pip install -r requirements.txt
 
 ## 실행 방법 (Usage)
 
-로컬 환경에서 Streamlit 애플리케이션을 실행:
+로컬 환경에서 ㅎ Streamlit 애플리케이션을 실행:
 
 ```bash
 streamlit run app.py
 ```
 
 명령어를 실행하면 브라우저가 열리며 `http://localhost:8501`에서 앱이 시작됩니다.
+
+## 기여 (Contributing)
+
+오픈소스 커뮤니티를 통해 이 프로젝트를 더 나은 교육용 툴로 만들기 위한 여러분의 모든 기여를 **진심으로 환영합니다**.
+
+1. 프로젝트를 포크(Fork)합니다.
+2. 기능 브랜치를 생성합니다. (`git checkout -b feature/AmazingFeature`)
+3. 변경 사항을 커밋합니다. (`git commit -m 'Add some AmazingFeature'`)
+4. 브랜치에 푸시합니다. (`git push origin feature/AmazingFeature`)
+5. Pull Request를 생성해 주세요!
 
 ## 라이선스 (License)
 
