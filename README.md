@@ -1,6 +1,6 @@
 # NeuralInsight: The Transparent MLP Visualizer
 
-*Read this in other languages: [🇰🇷 한국어(Korean)](README_ko.md)*
+*Read this in other languages: [한국어(Korean)](README_ko.md)*
 
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
 ![Streamlit](https://img.shields.io/badge/streamlit-app-FF4B4B.svg)
@@ -8,7 +8,7 @@
 
 An interactive, math-driven web application that demystifies Multi-Layer Perceptrons (MLPs). It dynamically renders backpropagation calculus using matrix notation and visualizes weight updates in real-time.
 
-🚀 **Live Demo**: [Try it on Streamlit Cloud](https://neuralinsight.streamlit.app/)
+**Live Demo**: [Try it on Streamlit Cloud](https://neuralinsight.streamlit.app/)
 
 ## Features
 

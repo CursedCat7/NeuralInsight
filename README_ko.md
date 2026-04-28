@@ -1,6 +1,6 @@
 # NeuralInsight: The Transparent MLP Visualizer
 
-*다른 언어로 보기: [🇺🇸 English](README.md)*
+*다른 언어로 보기: [English](README.md)*
 
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
 ![Streamlit](https://img.shields.io/badge/streamlit-app-FF4B4B.svg)
@@ -8,7 +8,7 @@
 
 **NeuralInsight**는 다층 퍼셉트론(MLP)의 동작 원리와 블랙박스를 시각적으로 풀어내는 스터디용 웹앱입니다. 행렬 표기법을 통해 역전파 미분 과정을 동적으로 렌더링하고 가중치 업데이트를 실시간으로 시각화합니다.
 
-🚀 **라이브 데모**: [Streamlit 클라우드에서 실행해보기](https://neuralinsight.streamlit.app/)
+**라이브 데모**: [Streamlit 클라우드에서 실행해보기](https://neuralinsight.streamlit.app/)
 
 ## 주요 기능 (Features)
 
