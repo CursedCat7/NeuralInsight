@@ -1,5 +1,7 @@
 # NeuralInsight: The Transparent MLP Visualizer
 
+*Read this in other languages: [🇰🇷 한국어(Korean)](README_ko.md)*
+
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
 ![Streamlit](https://img.shields.io/badge/streamlit-app-FF4B4B.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
