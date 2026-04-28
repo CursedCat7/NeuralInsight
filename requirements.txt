@@ -1,6 +1,5 @@
 streamlit
 numpy
-graphviz
 pandas
 pytest
 plotly

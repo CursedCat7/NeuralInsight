@@ -1,10 +1,11 @@
 import streamlit as st
 import numpy as np
-import graphviz
 from mlp_engine import MLP
 import pandas as pd
 import time
 import plotly.express as px
+import json
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="NeuralInsight", layout="wide")
 
@@ -75,28 +76,52 @@ for i in range(num_layers - 1):
     b_list.append(edited_b.values)
 
 st.sidebar.markdown("---")
+st.sidebar.subheader("Input & Target (단일 데이터 편집)")
+st.sidebar.info("Step-by-Step 모드에서 사용할 X, Y 값을 편집하세요.")
+
+if 'X_df' not in st.session_state or st.session_state['X_df'].shape[0] != current_input_size:
+    init_X = np.ones((current_input_size, 1)) * 0.5
+    if layers_str == "2,2,1":
+        init_X = np.array([[0.5], [0.1]])
+    st.session_state['X_df'] = pd.DataFrame(init_X, columns=['Value'], index=[f'x_{i+1}' for i in range(current_input_size)])
+
+if 'Y_df' not in st.session_state or st.session_state['Y_df'].shape[0] != current_output_size:
+    init_Y = np.ones((current_output_size, 1)) * 0.7
+    if layers_str == "2,2,1":
+        init_Y = np.array([[0.7]])
+    st.session_state['Y_df'] = pd.DataFrame(init_Y, columns=['Value'], index=[f'y_{i+1}' for i in range(current_output_size)])
+
+col_x, col_y = st.sidebar.columns(2)
+with col_x:
+    st.markdown("**Input ($X$)**")
+    edited_X = st.data_editor(st.session_state['X_df'], key="x_editor")
+with col_y:
+    st.markdown("**Target ($Y$)**")
+    edited_Y = st.data_editor(st.session_state['Y_df'], key="y_editor")
+
+X_manual = edited_X.values
+Y_manual = edited_Y.values
+
+st.sidebar.markdown("---")
 st.sidebar.subheader("Dataset Loader")
-uploaded_file = st.sidebar.file_uploader("CSV 파일 업로드", type=['csv'])
+uploaded_file = st.sidebar.file_uploader("연속 학습용 CSV 업로드", type=['csv'])
 
 if uploaded_file is not None:
     try:
         df_uploaded = pd.read_csv(uploaded_file)
         X_train = df_uploaded.iloc[:, :current_input_size].values.T
         Y_train = df_uploaded.iloc[:, current_input_size:current_input_size+current_output_size].values.T
-        st.sidebar.success(f"{X_train.shape[1]}개 데이터 로드 완료! (연속 학습에 사용됨)")
-        X = X_train[:, [0]]
-        Y = Y_train[:, [0]]
+        st.sidebar.success(f"{X_train.shape[1]}개 데이터 로드 완료! (연속 학습 전용)")
+        X = X_manual
+        Y = Y_manual
     except Exception as e:
         st.sidebar.error("CSV 파싱 오류")
-        X = np.ones((current_input_size, 1)) * 0.5
-        Y = np.ones((current_output_size, 1)) * 0.7
+        X = X_manual
+        Y = Y_manual
         X_train, Y_train = X, Y
 else:
-    X = np.ones((current_input_size, 1)) * 0.5
-    Y = np.ones((current_output_size, 1)) * 0.7
-    if layers_str == "2,2,1":
-        X = np.array([[0.5], [0.1]])
-        Y = np.array([[0.7]])
+    X = X_manual
+    Y = Y_manual
     X_train, Y_train = X, Y
 
 if st.sidebar.button("Apply Parameters", use_container_width=True):
@@ -114,77 +139,231 @@ def numpy_to_latex_bmatrix(arr):
         lines.append(" & ".join([f"{x:.4f}" for x in row]))
     return r"\begin{bmatrix} " + r" \\ ".join(lines) + r" \end{bmatrix}"
 
-def draw_mlp_dynamic(mlp, layers, step):
-    dot = graphviz.Digraph(comment='MLP Structure')
-    dot.attr(rankdir='LR', size='10,6', bgcolor='transparent')
-    dot.attr('node', shape='plaintext', fontname='Arial')
+def draw_mlp_d3_html(mlp, layers, step):
+    nodes = []
+    edges = []
     
-    color_in = '#E8F5E9'
-    color_hid = '#E3F2FD'
-    color_out = '#FFF3E0'
-    color_active_fwd = '#FFF59D'
-    color_active_bwd = '#FFCDD2'
-    text_color = 'black'
+    width = 800
+    height = 500
+    layer_width = width / (len(layers) + 1)
+    max_nodes = max(layers)
     
-    def make_html_node(title, z_val=None, a_val=None, x_val=None, bgcolor="white", bordercolor="black"):
-        if x_val is not None:
-            return f'''<
-            <TABLE BORDER="2" CELLBORDER="1" CELLSPACING="0" CELLPADDING="8" BGCOLOR="{bgcolor}" COLOR="{bordercolor}" STYLE="ROUNDED">
-                <TR><TD BORDER="0"><B><FONT POINT-SIZE="16" COLOR="{text_color}">{title}</FONT></B></TD></TR>
-                <TR><TD BGCOLOR="#FFFFFF50"><FONT POINT-SIZE="13" COLOR="black">입력 = {x_val:.2f}</FONT></TD></TR>
-            </TABLE>>'''
-        else:
-            return f'''<
-            <TABLE BORDER="2" CELLBORDER="1" CELLSPACING="0" CELLPADDING="8" BGCOLOR="{bgcolor}" COLOR="{bordercolor}" STYLE="ROUNDED">
-                <TR><TD COLSPAN="2" BORDER="0"><B><FONT POINT-SIZE="16" COLOR="{text_color}">{title}</FONT></B></TD></TR>
-                <TR>
-                    <TD BGCOLOR="#FFFFFF50"><FONT POINT-SIZE="13" COLOR="black"><I>z</I><BR/><B>{z_val:.2f}</B></FONT></TD>
-                    <TD BGCOLOR="#FFFFFF50"><FONT POINT-SIZE="13" COLOR="black"><I>a</I><BR/><B>{a_val:.2f}</B></FONT></TD>
-                </TR>
-            </TABLE>>'''
-    
-    node_names = []
-    # Create nodes
     for l_idx, num_nodes in enumerate(layers):
-        layer_nodes = []
+        x = (l_idx + 1) * layer_width
+        node_spacing = height / (num_nodes + 1)
+        
         is_input = (l_idx == 0)
         is_output = (l_idx == len(layers) - 1)
         
         if is_input:
-            color = color_active_fwd if step == 1 else (color_active_bwd if step == 5 else color_in)
+            color = "#E8F5E9" if step not in [1, 6, 7] else "#C8E6C9"
+            stroke = "#4CAF50"
+            glow_type = "blue" if step in [1, 6] else ("red" if step == 7 else "")
         elif is_output:
-            color = color_active_fwd if step == 1 else (color_active_bwd if step in [2,3] else color_out)
+            color = "#FFF3E0" if step not in [1,2,3,6,7] else "#FFE0B2"
+            stroke = "#FF9800"
+            glow_type = "blue" if step in [1, 6] else ("red" if step in [2, 3, 7] else "")
         else:
-            color = color_active_fwd if step == 1 else (color_active_bwd if step == 4 else color_hid)
+            color = "#E3F2FD" if step not in [1,4,6,7] else "#BBDEFB"
+            stroke = "#2196F3"
+            glow_type = "blue" if step in [1, 6] else ("red" if step in [4, 7] else "")
             
         for n_idx in range(num_nodes):
+            y = (n_idx + 1) * node_spacing
+            y_offset = (height - (num_nodes + 1) * node_spacing) / 2
+            y += y_offset
+            
             node_id = f"L{l_idx}_N{n_idx}"
-            layer_nodes.append(node_id)
+            
             if is_input:
-                title = f"<I>x</I><SUB>{n_idx+1}</SUB>"
-                x_val = mlp.cache['activations'][0][n_idx, 0]
-                dot.node(node_id, make_html_node(title, x_val=x_val, bgcolor=color, bordercolor='#4CAF50'))
+                label_html = f"x<tspan baseline-shift='sub' font-size='12'>{n_idx+1}</tspan>"
+                val_text = f"Input: {mlp.cache['activations'][0][n_idx, 0]:.2f}"
             else:
-                title = f"<I>y&#770;</I><SUB>{n_idx+1}</SUB>" if is_output else f"<I>h</I><SUP>({l_idx})</SUP><SUB>{n_idx+1}</SUB>"
+                if is_output:
+                    label_html = f"ŷ<tspan baseline-shift='sub' font-size='12'>{n_idx+1}</tspan>"
+                else:
+                    label_html = f"h<tspan baseline-shift='super' font-size='10'>({l_idx})</tspan><tspan baseline-shift='sub' font-size='12'>{n_idx+1}</tspan>"
+                
                 z_val = mlp.cache['zs'][l_idx-1][n_idx, 0]
                 a_val = mlp.cache['activations'][l_idx][n_idx, 0]
-                border_color = '#FF9800' if is_output else '#2196F3'
-                dot.node(node_id, make_html_node(title, z_val=z_val, a_val=a_val, bgcolor=color, bordercolor=border_color))
-        node_names.append(layer_nodes)
-        
-    # Create edges
+                val_text = f"z: {z_val:.2f} | a: {a_val:.2f}"
+            
+            nodes.append({
+                "id": node_id,
+                "x": x,
+                "y": y,
+                "label": label_html,
+                "val_text": val_text,
+                "color": color,
+                "stroke": stroke,
+                "glow_type": glow_type
+            })
+            
     for l_idx in range(len(layers) - 1):
         W = mlp.weights[l_idx]
-        is_active = (step == 1) or (step == 5 - l_idx)
-        edge_color = '#E53935' if (is_active and step > 1) else ('#2196F3' if is_active else '#B0BEC5')
-        edge_penwidth = '3' if is_active else '1'
+        is_active = (step in [1, 6, 7]) or (step == 5 - l_idx)
+        is_forward = (step in [1, 6])
         
         for out_n in range(layers[l_idx+1]):
             for in_n in range(layers[l_idx]):
                 weight_val = W[out_n, in_n]
-                dot.edge(node_names[l_idx][in_n], node_names[l_idx+1][out_n], label=f"{weight_val:.2f}", color=edge_color, penwidth=edge_penwidth, fontcolor=edge_color)
+                source = f"L{l_idx}_N{in_n}"
+                target = f"L{l_idx+1}_N{out_n}"
                 
-    return dot
+                edges.append({
+                    "source": source,
+                    "target": target,
+                    "weight": float(weight_val),
+                    "is_active": is_active,
+                    "is_forward": is_forward
+                })
+                
+    data = {"nodes": nodes, "edges": edges}
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <style>
+            body {{ margin: 0; padding: 0; overflow: hidden; background-color: transparent; }}
+            .node-circle {{ transition: all 0.3s; }}
+            @keyframes pulse-blue {{
+                0% {{ filter: drop-shadow(0 0 5px rgba(33, 150, 243, 0.4)); }}
+                50% {{ filter: drop-shadow(0 0 20px rgba(33, 150, 243, 0.9)); }}
+                100% {{ filter: drop-shadow(0 0 5px rgba(33, 150, 243, 0.4)); }}
+            }}
+            @keyframes pulse-red {{
+                0% {{ filter: drop-shadow(0 0 5px rgba(244, 67, 54, 0.4)); }}
+                50% {{ filter: drop-shadow(0 0 20px rgba(244, 67, 54, 0.9)); }}
+                100% {{ filter: drop-shadow(0 0 5px rgba(244, 67, 54, 0.4)); }}
+            }}
+            .glow-blue {{ animation: pulse-blue 1.5s infinite; }}
+            .glow-red {{ animation: pulse-red 1.5s infinite; }}
+            .label-text {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 16px; font-weight: bold; fill: #333; text-anchor: middle; }}
+            .val-text {{ font-family: 'Segoe UI', sans-serif; font-size: 12px; fill: #444; text-anchor: middle; font-weight: 500; }}
+            .weight-text {{ font-family: monospace; font-size: 13px; fill: #555; text-anchor: middle; font-weight: bold; paint-order: stroke; stroke: rgba(255,255,255,0.9); stroke-width: 4px; }}
+        </style>
+    </head>
+    <body>
+        <div id="graph-container"></div>
+        <script>
+            const data = {json.dumps(data)};
+            const width = 800;
+            const height = 500;
+            
+            const svg = d3.select("#graph-container")
+                          .append("svg")
+                          .attr("width", "100%")
+                          .attr("height", "600px")
+                          .attr("viewBox", `0 0 ${{width}} ${{height}}`)
+                          .attr("preserveAspectRatio", "xMidYMid meet");
+                          
+            const defs = svg.append("defs");
+            defs.append("marker")
+                .attr("id", "arrow-fwd")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", 32)
+                .attr("refY", 0)
+                .attr("markerWidth", 5)
+                .attr("markerHeight", 5)
+                .attr("orient", "auto")
+                .append("path")
+                .attr("fill", "#2196F3")
+                .attr("d", "M0,-5L10,0L0,5");
+                
+            defs.append("marker")
+                .attr("id", "arrow-bwd")
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", -22)
+                .attr("refY", 0)
+                .attr("markerWidth", 5)
+                .attr("markerHeight", 5)
+                .attr("orient", "auto-start-reverse")
+                .append("path")
+                .attr("fill", "#F44336")
+                .attr("d", "M0,-5L10,0L0,5");
+                
+            const link = svg.selectAll(".link")
+                .data(data.edges)
+                .enter().append("g")
+                .attr("class", "link");
+                
+            link.append("line")
+                .attr("x1", d => data.nodes.find(n => n.id === d.source).x)
+                .attr("y1", d => data.nodes.find(n => n.id === d.source).y)
+                .attr("x2", d => data.nodes.find(n => n.id === d.target).x)
+                .attr("y2", d => data.nodes.find(n => n.id === d.target).y)
+                .attr("stroke", d => d.is_active ? (d.is_forward ? "#2196F3" : "#F44336") : "#CFD8DC")
+                .attr("stroke-width", d => Math.max(1, Math.min(8, Math.abs(d.weight) * 3)))
+                .attr("stroke-dasharray", d => d.is_active && !d.is_forward ? "6,4" : "none")
+                .attr("marker-end", d => d.is_active && d.is_forward ? "url(#arrow-fwd)" : "none")
+                .attr("marker-start", d => d.is_active && !d.is_forward ? "url(#arrow-bwd)" : "none")
+                .style("opacity", d => d.is_active ? 0.9 : 0.4);
+                
+            const activeLinks = link.filter(d => d.is_active);
+            activeLinks.append("circle")
+                .attr("r", 5)
+                .attr("fill", d => d.is_forward ? "#1976D2" : "#D32F2F")
+                .style("filter", "drop-shadow(0 0 4px rgba(0,0,0,0.3))")
+                .append("animateMotion")
+                .attr("dur", "1.2s")
+                .attr("repeatCount", "indefinite")
+                .attr("path", d => {{
+                    const src = data.nodes.find(n => n.id === d.source);
+                    const tgt = data.nodes.find(n => n.id === d.target);
+                    if (d.is_forward) return `M ${{src.x}} ${{src.y}} L ${{tgt.x}} ${{tgt.y}}`;
+                    else return `M ${{tgt.x}} ${{tgt.y}} L ${{src.x}} ${{src.y}}`;
+                }});
+
+            link.append("text")
+                .attr("class", "weight-text")
+                .attr("x", d => (data.nodes.find(n => n.id === d.source).x * 0.65 + data.nodes.find(n => n.id === d.target).x * 0.35))
+                .attr("y", d => (data.nodes.find(n => n.id === d.source).y * 0.65 + data.nodes.find(n => n.id === d.target).y * 0.35) - 6)
+                .text(d => d.weight.toFixed(2));
+
+            const node = svg.selectAll(".node")
+                .data(data.nodes)
+                .enter().append("g")
+                .attr("class", "node")
+                .attr("transform", d => `translate(${{d.x}},${{d.y}})`);
+                
+            node.append("circle")
+                .attr("r", 26)
+                .attr("fill", d => d.color)
+                .attr("stroke", d => d.stroke)
+                .attr("stroke-width", 3)
+                .attr("class", d => d.glow_type === "blue" ? "node-circle glow-blue" : (d.glow_type === "red" ? "node-circle glow-red" : "node-circle"));
+                
+            node.append("text")
+                .attr("class", "label-text")
+                .attr("dy", "5")
+                .html(d => d.label);
+                
+            const valBox = node.append("g")
+                .attr("transform", "translate(0, 38)");
+                
+            valBox.append("rect")
+                .attr("x", -45)
+                .attr("y", -12)
+                .attr("width", 90)
+                .attr("height", 24)
+                .attr("rx", 12)
+                .attr("fill", "rgba(255, 255, 255, 0.9)")
+                .attr("stroke", "#B0BEC5")
+                .attr("stroke-width", 1.5)
+                .style("filter", "drop-shadow(0 2px 4px rgba(0,0,0,0.1))");
+                
+            valBox.append("text")
+                .attr("class", "val-text")
+                .attr("dy", "4")
+                .text(d => d.val_text);
+                
+        </script>
+    </body>
+    </html>
+    """
+    return html
 
 st.title("NeuralInsight: The Transparent MLP Visualizer")
 st.markdown("Developed by [@CursedCat7](https://github.com/CursedCat7) | [GitHub Repository](https://github.com/CursedCat7/NeuralInsight.git)")
@@ -221,7 +400,8 @@ with tab1:
     
     vis_col, math_col = st.columns([1.2, 1.0])
     with vis_col:
-        st.graphviz_chart(draw_mlp_dynamic(st.session_state.mlp, layers, step))
+        html_str = draw_mlp_d3_html(st.session_state.mlp, layers, step)
+        components.html(html_str, height=600, scrolling=False)
         
     with math_col:
         with st.expander("수식 기호 사전 (Math Symbol Legend)", expanded=False):
@@ -321,47 +501,103 @@ with tab1:
             else:
                 st.warning("은닉층이 없는 구조이므로 4단계 연산이 생략됩니다.")
         elif step == 5:
-            st.info("**5. 가중치 업데이트 (Weight Update)**\n\n- 경사하강법(Gradient Descent)을 적용하여 새로운 가중치로 갱신합니다.\n- $W_{new} = W_{old} - \eta \cdot \frac{\partial L}{\partial W}$ (여기서 $\eta$는 학습률입니다.)")
+            st.info("**5. 가중치 업데이트 (Weight Update)**\n\n- 경사하강법(Gradient Descent)을 적용하여 새로운 가중치로 갱신합니다.\n- 학습률(Learning Rate)을 곱한 기울기값을 기존 가중치에서 뺍니다.")
+            st.latex(r"W_{\text{new}} = W_{\text{old}} - \eta \frac{\partial L}{\partial W}")
             for l_idx in range(len(layers)-1):
                 layer_num = l_idx + 1
-                st.markdown(f"**Layer {layer_num} $W$ Update**")
+                st.markdown(f"**Layer {layer_num} 가중치 업데이트 ($W^{{({layer_num})}}$):**")
                 st.latex(rf"W^{{({layer_num})}}_{{\text{{new}}}} = W^{{({layer_num})}}_{{\text{{old}}}} - \eta \frac{{\partial L}}{{\partial W^{{({layer_num})}}}}")
 
 with tab2:
-    st.markdown("### Continuous Training (연속 학습) & Weight Heatmap")
+    st.markdown("### Continuous Training (연속 학습) 대시보드")
     
-    col_t1, col_t2 = st.columns([1, 2])
-    with col_t1:
-        epochs = st.number_input("학습 에폭 (Epochs)", min_value=10, max_value=2000, value=200, step=10)
-        anim_speed = st.slider("애니메이션 속도 (초 단위 대기)", min_value=0.0, max_value=0.5, value=0.05, step=0.01)
+    ctrl_col1, ctrl_col2, ctrl_col3 = st.columns(3)
+    with ctrl_col1:
+        epochs = st.number_input("총 학습 에폭 (Epochs)", min_value=10, max_value=5000, value=500, step=10)
+    with ctrl_col2:
+        update_freq = st.number_input("시각화 갱신 주기 (에폭 단위)", min_value=1, max_value=500, value=20, step=1)
+    with ctrl_col3:
+        anim_speed = st.slider("애니메이션 속도 (초 단위 대기)", min_value=0.0, max_value=0.5, value=0.01, step=0.01)
         
-        if st.button("학습 시작 (Train)", use_container_width=True):
-            temp_mlp = MLP(layers=layers, activation=act_choice, loss=loss_choice, optimizer=opt_choice)
-            try:
-                temp_mlp.set_params(W_list, b_list)
-            except:
-                pass
+    start_train = st.button("학습 시작 (Train)", use_container_width=True, type="primary")
+    
+    st.markdown("---")
+    
+    metrics_placeholder = st.empty()
+    
+    col_graph, col_loss = st.columns([1.2, 1])
+    with col_graph:
+        graph_placeholder = st.empty()
+    with col_loss:
+        loss_placeholder = st.empty()
+        
+    st.markdown("#### 가중치 및 기울기 분포 (Weights & Gradients)")
+    st.info("""
+    **📊 그래프 해석 가이드**
+    - **$W$ Heatmap (히트맵)**: 해당 층의 가중치 행렬입니다. 붉은색은 양(+), 푸른색은 음(-)의 가중치를 의미하며 색이 진할수록 연결 강도가 셉니다.
+    - **$\\nabla W$ Distribution (기울기 분포)**: 역전파된 오차로 인해 계산된 가중치 변화량($dW$)의 히스토그램입니다. x축의 값이 0에만 비정상적으로 몰려있다면 **'기울기 소실(Vanishing Gradient)'** 상태임을 나타냅니다.
+    """)
+    heatmaps_placeholder = st.empty()
+    
+    if start_train:
+        temp_mlp = MLP(layers=layers, activation=act_choice, loss=loss_choice, optimizer=opt_choice)
+        try:
+            temp_mlp.set_params(W_list, b_list)
+        except:
+            pass
             
-            loss_placeholder = st.empty()
-            heatmap_placeholder = st.empty()
-            
-            losses = []
-            
-            with st.spinner(f"{epochs} Epochs 학습 중..."):
-                for epoch in range(epochs):
-                    loss = temp_mlp.train(X_train, Y_train, epochs=1, learning_rate=lr)[0]
-                    losses.append(loss)
-                    
-                    if epoch % max(1, epochs//20) == 0 or epoch == epochs - 1:
-                        # Update charts
-                        loss_df = pd.DataFrame(losses, columns=['Loss'])
-                        loss_placeholder.line_chart(loss_df)
-                        
-                        # Plotly Heatmap for W1
-                        fig = px.imshow(temp_mlp.weights[0], text_auto=True, aspect="auto", title="$W^{(1)}$ Matrix Heatmap", color_continuous_scale="RdBu_r", zmin=-2, zmax=2)
-                        heatmap_placeholder.plotly_chart(fig, use_container_width=True, theme="streamlit", key=f"heat_{epoch}")
-                        
-                        if anim_speed > 0:
-                            time.sleep(anim_speed)
+        losses = []
+        prev_loss = None
+        
+        with st.spinner(f"{epochs} Epochs 학습 중..."):
+            for epoch in range(1, epochs + 1):
+                loss = temp_mlp.train(X_train, Y_train, epochs=1, learning_rate=lr)[0]
+                losses.append(loss)
                 
-            st.success("학습 완료!")
+                if epoch % update_freq == 0 or epoch == epochs:
+                    loss_delta = 0 if prev_loss is None else (loss - prev_loss)
+                    
+                    with metrics_placeholder.container():
+                        m1, m2, m3 = st.columns(3)
+                        m1.metric("Current Epoch", f"{epoch} / {epochs}")
+                        m2.metric("Loss ($L$)", f"{loss:.4f}", f"{loss_delta:.4f}", delta_color="inverse")
+                        m3.metric("Learning Rate ($\eta$)", f"{lr}")
+                    prev_loss = loss
+                    
+                    loss_df = pd.DataFrame(losses, columns=['Loss'])
+                    loss_placeholder.line_chart(loss_df, height=350)
+                    
+                    # 1. Forward Pass Rendering
+                    html_str_fwd = draw_mlp_d3_html(temp_mlp, layers, step=1)
+                    with graph_placeholder:
+                        components.html(html_str_fwd, height=400, scrolling=False)
+                        
+                    if anim_speed > 0:
+                        time.sleep(anim_speed)
+                        
+                    # 2. Backward Pass Rendering
+                    html_str_bwd = draw_mlp_d3_html(temp_mlp, layers, step=7)
+                    with graph_placeholder:
+                        components.html(html_str_bwd, height=400, scrolling=False)
+                    
+                    with heatmaps_placeholder.container():
+                        h_cols = st.columns(len(layers)-1)
+                        for l_idx in range(len(layers)-1):
+                            with h_cols[l_idx]:
+                                st.latex(rf"\text{{Layer }} {l_idx+1} \text{{ Heatmap }} (W^{{({l_idx+1})}})")
+                                fig_w = px.imshow(temp_mlp.weights[l_idx], text_auto=True, aspect="auto", 
+                                                  color_continuous_scale="RdBu_r", zmin=-2, zmax=2)
+                                fig_w.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=200)
+                                st.plotly_chart(fig_w, use_container_width=True, key=f"w_{l_idx}_{epoch}")
+                                
+                                if 'gradients' in temp_mlp.cache and 'dW' in temp_mlp.cache['gradients'] and len(temp_mlp.cache['gradients']['dW']) > l_idx:
+                                    st.latex(rf"\text{{Layer }} {l_idx+1} \text{{ Gradients }} (\nabla W^{{({l_idx+1})}})")
+                                    dW = temp_mlp.cache['gradients']['dW'][l_idx].flatten()
+                                    fig_g = px.histogram(dW, nbins=20)
+                                    fig_g.update_layout(margin=dict(l=10, r=10, t=10, b=10), height=150, showlegend=False)
+                                    st.plotly_chart(fig_g, use_container_width=True, key=f"g_{l_idx}_{epoch}")
+                                    
+                    if anim_speed > 0:
+                        time.sleep(anim_speed)
+        
+        st.success("학습 완료!")
