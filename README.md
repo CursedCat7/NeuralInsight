@@ -1,4 +1,4 @@
-# GlassBox AI: The Transparent MLP Visualizer
+# NeuralInsight: The Transparent MLP Visualizer
 
 ![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)
 ![Streamlit](https://img.shields.io/badge/streamlit-app-FF4B4B.svg)
@@ -18,8 +18,8 @@ An interactive, math-driven web application that demystifies Multi-Layer Percept
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/glassbox-ai.git
-cd glassbox-ai
+git clone https://github.com/CursedCat7/NeuralInsight.git
+cd NeuralInsight
 ```
 
 2. Install dependencies:
