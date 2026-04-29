@@ -1,0 +1,13 @@
+.git
+.gitignore
+.devcontainer
+__pycache__
+.pytest_cache
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.venv/

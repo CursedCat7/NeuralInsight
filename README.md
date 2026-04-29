@@ -45,6 +45,23 @@ streamlit run app.py
 
 The app will automatically open in your default browser at `http://localhost:8501`.
 
+## Docker Deployment
+
+This project can be easily deployed to cloud environments (AWS, GCP, etc.) or run locally using Docker.
+
+1. **Build the Docker image**:
+   ```bash
+   docker build -t neuralinsight .
+   ```
+
+2. **Run the container**:
+   ```bash
+   docker run -p 8501:8501 neuralinsight
+   ```
+
+After running, access the app in your browser at `http://localhost:8501`.
+*(Note: The existing Streamlit Cloud deployment operates via GitHub integration and remains safely unaffected by this Docker setup.)*
+
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.

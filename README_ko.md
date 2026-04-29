@@ -37,13 +37,30 @@ pip install -r requirements.txt
 
 ## 실행 방법 (Usage)
 
-로컬 환경에서 ㅎ Streamlit 애플리케이션을 실행:
+로컬 환경에서 Streamlit 애플리케이션을 실행:
 
 ```bash
 streamlit run app.py
 ```
 
 명령어를 실행하면 브라우저가 열리며 `http://localhost:8501`에서 웹앱이 시작됩니다.
+
+## Docker를 이용한 배포 (Docker Deployment)
+
+이 프로젝트는 Docker를 이용해 클라우드 환경(AWS, GCP 등)이나 로컬에서 쉽게 배포 및 실행할 수 있습니다.
+
+1. **Docker 이미지 빌드**:
+   ```bash
+   docker build -t neuralinsight .
+   ```
+
+2. **컨테이너 실행**:
+   ```bash
+   docker run -p 8501:8501 neuralinsight
+   ```
+
+실행 후 브라우저에서 `http://localhost:8501`로 접속하면 앱을 이용할 수 있습니다.
+*(참고: 기존의 Streamlit 클라우드 배포 환경은 GitHub 연동 방식으로 동작하며, 이 Docker 설정과는 독립적으로 안전하게 유지됩니다.)*
 
 ## 기여 (Contributing)
 
