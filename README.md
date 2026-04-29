@@ -10,6 +10,8 @@ An interactive, math-driven web application that demystifies Multi-Layer Percept
 
 **Live Demo**: [Try it on Streamlit Cloud](https://neuralinsight.streamlit.app/)
 
+> **Note**: This project currently only supports Korean. English and additional multilingual support will be developed in future updates.
+
 ## Features
 
 - **Dynamic Architecture**: Define any network structure (e.g., `3,5,4,2`) and watch the nodes, edges, and weight matrices adapt instantly.
