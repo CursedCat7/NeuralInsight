@@ -47,7 +47,7 @@ streamlit run app.py
 
 ## Docker를 이용한 배포 (Docker Deployment)
 
-이 프로젝트는 Docker를 이용해 클라우드 환경(AWS, GCP 등)이나 로컬에서 쉽게 배포 및 실행할 수 있습니다.
+Docker를 이용해 클라우드 환경이나 로컬에서 쉽게 배포 및 실행할 수 있도록 셋업되어있습니다.
 
 1. **Docker 이미지 빌드**:
    ```bash
@@ -60,7 +60,6 @@ streamlit run app.py
    ```
 
 실행 후 브라우저에서 `http://localhost:8501`로 접속하면 앱을 이용할 수 있습니다.
-*(참고: 기존의 Streamlit 클라우드 배포 환경은 GitHub 연동 방식으로 동작하며, 이 Docker 설정과는 독립적으로 안전하게 유지됩니다.)*
 
 ## 기여 (Contributing)
 

@@ -60,7 +60,6 @@ This project can be easily deployed to cloud environments (AWS, GCP, etc.) or ru
    ```
 
 After running, access the app in your browser at `http://localhost:8501`.
-*(Note: The existing Streamlit Cloud deployment operates via GitHub integration and remains safely unaffected by this Docker setup.)*
 
 ## Contributing
 
