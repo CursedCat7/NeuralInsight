@@ -6,9 +6,9 @@
 ![Streamlit](https://img.shields.io/badge/streamlit-app-FF4B4B.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-**NeuralInsight**는 다층 퍼셉트론(MLP)의 동작 원리와 블랙박스를 시각적으로 풀어내는 스터디용 웹앱입니다. 행렬 표기법을 통해 역전파 미분 과정을 동적으로 렌더링하고 가중치 업데이트를 실시간으로 시각화합니다.
+**NeuralInsight**는 다층 퍼셉트론(MLP)의 동작 원리와 블랙박스를 시각적으로 풀어내는 스터디용 웹앱입니다. 행렬 표기법을 통해 역전파 미분 과정을 동적으로 렌더링하고 가중치 업데이트를 실시간으로 시각화하여 학습과정 원리를 쉽게 보고 공부하기 위해 만들었습니다.
 
-**라이브 데모**: [Streamlit 클라우드에서 실행해보기](https://neuralinsight.streamlit.app/)
+**라이브 데모**: Streamlit 클라우드에 배포하여 온라인 웹으로 사용이 가능합니다! [Streamlit 클라우드에서 실행해보기](https://neuralinsight.streamlit.app/)
 
 ## 주요 기능 (Features)
 
@@ -18,7 +18,7 @@
 - **학습 애니메이션 및 히트맵**: 연속 학습 모드에서 사용자가 설정한 속도에 맞춰 동적인 Loss 그래프와 Plotly 가중치 히트맵 애니메이션을 제공합니다.
 - **커스텀 데이터셋 로드**: 보유하고 있는 CSV 데이터셋을 업로드하여, 다양한 옵티마이저(SGD, Momentum, Adam)와 활성화 함수 환경에서 모델이 어떻게 수렴하는지 관찰할 수 있습니다.
 
-## 설치 및 셋업 (Setup)
+## 로컬 설치 및 셋업 (Setup)
 
 1. 레포지토리 클론:
 ```bash
@@ -31,7 +31,7 @@ cd NeuralInsight
 pip install -r requirements.txt
 ```
 
-*(참고: 네트워크 그래프를 정상적으로 렌더링하려면 시스템에 *Graphviz가 설치되어 있어야 합니다.)*
+*(참고: 네트워크 그래프를 정상적으로 렌더링하려면 로컬구동환경에 *Graphviz가 설치되어 있어야 합니다.)*
 
 ## 실행 방법 (Usage)
 
@@ -41,17 +41,17 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-명령어를 실행하면 브라우저가 열리며 `http://localhost:8501`에서 앱이 시작됩니다.
+명령어를 실행하면 브라우저가 열리며 `http://localhost:8501`에서 웹앱이 시작됩니다.
 
 ## 기여 (Contributing)
 
-오픈소스 커뮤니티를 통해 이 프로젝트를 더 나은 교육용 툴로 만들기 위한 여러분의 모든 기여를 **진심으로 환영합니다**.
+오픈소스 커뮤니티를 통해 이 프로젝트를 더 나은 교육용 툴로 만들기 위한 모든 기여를 **진심으로 환영합니다**.
 
-1. 프로젝트를 포크(Fork)합니다.
-2. 기능 브랜치를 생성합니다. (`git checkout -b feature/AmazingFeature`)
-3. 변경 사항을 커밋합니다. (`git commit -m 'Add some AmazingFeature'`)
-4. 브랜치에 푸시합니다. (`git push origin feature/AmazingFeature`)
-5. Pull Request를 생성해 주세요!
+1. 프로젝트를 포크(Fork).
+2. 기능 브랜치를 생성. (`git checkout -b feature/AmazingFeature`)
+3. 변경 사항을 커밋. (`git commit -m 'Add some AmazingFeature'`)
+4. 브랜치에 푸시. (`git push origin feature/AmazingFeature`)
+5. Pull Request를 생성해 주세요! 검토 후 반영하겠습니다!
 
 ## 라이선스 (License)
 
